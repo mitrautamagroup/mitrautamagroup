@@ -2375,3 +2375,80 @@ button, input, select {
     display: none;
   }
 }
+
+/* ==========================================================================
+   AI CHAT — LOGIN SCREEN
+   ========================================================================== */
+
+.ai-login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 20px;
+  gap: 12px;
+}
+
+.ai-login-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.ai-login-title {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: #1a237e;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ai-login-desc {
+  font-size: 0.88rem;
+  color: #5a6080;
+  line-height: 1.6;
+  max-width: 280px;
+  margin: 0;
+}
+
+.ai-google-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1.5px solid #dadce0;
+  color: #3c4043;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-top: 6px;
+  font-family: var(--font-body);
+}
+
+.ai-google-btn:hover {
+  background: #f8f9ff;
+  border-color: #3949ab;
+  box-shadow: 0 4px 14px rgba(26, 35, 126, 0.15);
+  transform: translateY(-2px);
+}
+
+.ai-google-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ai-login-note {
+  font-size: 0.72rem;
+  color: #a0a8c0;
+  margin: 0;
+}

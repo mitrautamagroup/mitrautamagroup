@@ -1,12 +1,46 @@
 /**
- * ASISTEN KENCANA AI — Powered by Google Gemini
- * AI Chatbot for Gebyok Kencana Jati Jepara - Mitra Utama Group
+ * ASISTEN KENCANA AI — Firebase Auth + Firestore + Gemini
+ * =========================================================
+ * User WAJIB login Google sebelum bisa chat dengan AI.
+ * Semua percakapan tersimpan otomatis di Firestore.
+ * Admin bisa lihat data user di Firebase Console.
  *
- * ⚠️  KONFIGURASI: Ganti nilai GEMINI_API_KEY di bawah ini dengan API key Anda.
- *     Dapatkan API Key GRATIS di: https://aistudio.google.com/app/apikey
+ * SETUP (isi nilai di bawah ini):
+ * 1. GEMINI_API_KEY   → https://aistudio.google.com/app/apikey
+ * 2. firebaseConfig   → Firebase Console > Project Settings > Your apps
+ * 3. Di Firebase Console: aktifkan Authentication > Google provider
+ * 4. Di Firebase Console: buat Firestore Database (mode: production)
  */
 
-const GEMINI_API_KEY = 'MASUKKAN_API_KEY_ANDA_DISINI'; // <-- GANTI DI SINI
+// ==========================================
+// 🔑 KONFIGURASI — ISI NILAI INI
+// ==========================================
+
+const GEMINI_API_KEY = 'MASUKKAN_GEMINI_API_KEY_ANDA'; // https://aistudio.google.com/app/apikey
+
+const firebaseConfig = {
+  apiKey:            "MASUKKAN_FIREBASE_API_KEY",
+  authDomain:        "MASUKKAN.firebaseapp.com",
+  projectId:         "MASUKKAN_PROJECT_ID",
+  storageBucket:     "MASUKKAN.appspot.com",
+  messagingSenderId: "MASUKKAN_SENDER_ID",
+  appId:             "MASUKKAN_APP_ID"
+};
+
+// ==========================================
+// FIREBASE SDK (loaded via CDN in index.html)
+// ==========================================
+import { initializeApp }                              from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, increment, updateDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+const app   = initializeApp(firebaseConfig);
+const auth  = getAuth(app);
+const db    = getFirestore(app);
+
+// ==========================================
+// GEMINI CONFIG
+// ==========================================
 const GEMINI_MODEL   = 'gemini-2.0-flash-lite';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -31,137 +65,75 @@ Produk terpasang: Lebih dari 2.800 unit di seluruh Indonesia
 
 1. PINTU GEBYOK KUDUSAN MAHKOTA GUNUNGAN 3 DIMENSI
    - Tipe: Pintu Utama / Fasad Joglo & Hunian Modern
-   - Deskripsi: Ukiran relief tembus 3D khas Kudus dengan ornamen Gunungan Wayang dan lung-lungan. Sangat anggun untuk pintu depan rumah Joglo, limasan, maupun hunian modern tropis.
+   - Deskripsi: Ukiran relief tembus 3D khas Kudus dengan ornamen Gunungan Wayang dan lung-lungan.
    - Dimensi Standar: Lebar 300 cm, Tinggi 275 cm (custom bisa s/d 600 cm)
-   - Ukuran Tiang (Soko): 14 cm x 12 cm
-   - Harga Normal: Rp 26.500.000
-   - Harga Promo: Rp 19.800.000
+   - Harga Normal: Rp 26.500.000 | Harga Promo: Rp 19.800.000
    - Bonus: Handle pintu kuningan antik ukir + palet kayu ekspor
 
 2. GEBYOK PELAMINAN MEGAH UKIR BUNGA & RELIEF KARAWANGAN
-   - Tipe: Dekorasi Pelaminan & Wedding Stage / Backdrop Pernikahan
-   - Deskripsi: Backdrop dekorasi panggung pernikahan adat Jawa & Nusantara. Desain modular sistem knockdown mudah dibongkar-pasang.
+   - Tipe: Dekorasi Pelaminan & Wedding Stage
    - Dimensi: Lebar 600-800 cm (6 panel knockdown), Tinggi 280 cm
-   - Harga Normal: Rp 42.000.000
-   - Harga Promo: Rp 32.500.000
-   - Cocok untuk: Wedding Organizer, Gedung Pertemuan, Hotel, Pendopo
+   - Harga Normal: Rp 42.000.000 | Harga Promo: Rp 32.500.000
 
 3. PARTISI SKETSEL GEBYOK PENYEKAT RUANG MODERN
    - Tipe: Partisi Interior / Pembatas Ruang
-   - Deskripsi: Penyekat ruang tamu dan ruang keluarga yang elegan. Pola kisi-kisi ukiran tembus (karawangan) memberikan sirkulasi udara dan cahaya natural.
    - Dimensi: Lebar 200-250 cm, Tinggi 240 cm
-   - Model: Bisa lipat / geser / statis
-   - Ukiran: Dua muka berukir tembus (bisa dilihat dari depan & belakang)
-   - Harga Normal: Rp 17.500.000
-   - Harga Promo: Rp 13.900.000
+   - Harga Normal: Rp 17.500.000 | Harga Promo: Rp 13.900.000
 
 4. GEBYOK ROYAL JEPARA KALIGRAFI & RELIEF LUNG FLORAL
    - Tipe: Pintu Utama Luxury / Fasad Villa & Resort
-   - Deskripsi: Kemegahan kayu jati grade A super dengan finishing melamic dark brown. Ornamen kaligrafi, relief naga & gunungan kembar yang berkarisma.
    - Dimensi: Lebar 350 cm, Tinggi 280 cm
-   - Tiang: 15 cm x 14 cm extra tebal
-   - Harga Normal: Rp 31.000.000
-   - Harga Promo: Rp 23.500.000
-
-5. PRODUK LAINNYA (Custom Order):
-   - Gebyok Pintu Gapura Masjid (dengan ornamen kaligrafi Arab)
-   - Jendela Gebyok Ukir
-   - Backdrop Acara & Pameran
-   - Gebyok Minimalis Modern (kombinasi kayu & kaca)
+   - Harga Normal: Rp 31.000.000 | Harga Promo: Rp 23.500.000
 
 === BAHAN & KUALITAS ===
-- Kayu Jati Grade A Super: Jati TPK Perhutani tua (>40 tahun), kering oven (MC < 12%), serat padat emas
-- Kayu Jati Grade B: Jati kampung merah pilihan, kering alami, harga lebih ekonomis
-- Semua kayu bersertifikat SVLK (legalitas kayu resmi pemerintah)
-- Teknik sambungan: Purus & Pantek tradisional (tanpa paku logam kasar)
-- Bebas rayap, bebas bubuk, tahan cuaca
-
-=== ESTIMASI HARGA SISTEM KALKULASI ===
-Perhitungan kasar berdasarkan kalkulator website:
-- Harga Dasar per meter lebar: 
-  * Pintu Kudusan: Rp 6.200.000/m
-  * Gebyok Minimalis: Rp 5.300.000/m
-  * Pelaminan: Rp 4.200.000/m
-  * Partisi: Rp 4.800.000/m
-- Multiplier Kualitas Kayu:
-  * Jati TPK Super (Grade A): x 1.25
-  * Jati Kampung Pilihan (Grade B): x 1.0
-- Biaya Tambahan Finishing:
-  * Natural Doff/Satin: Gratis
-  * Melamic Gloss Mewah: +Rp 400.000
-  * Aksen Prada Emas (Gold Leaf): +Rp 1.200.000
-  * Rustic Antik Tua: +Rp 600.000
-
-=== PILIHAN FINISHING ===
-1. Natural Doff/Satin – menampilkan keindahan serat asli kayu jati
-2. Melamic Gloss/Semigloss – kilap premium, proteksi tinggi
-3. Aksen Prada Emas (Gold Leaf) – sapuan cat emas mewah di ornamen relief
-4. Rustic/Antik Bakar – kesan kayu antik berusia ratusan tahun
+- Kayu Jati Grade A Super (TPK Perhutani tua >40 tahun), kering oven MC<12%
+- Kayu Jati Grade B: Jati kampung merah pilihan
+- Semua kayu bersertifikat SVLK
+- Garansi resmi 10 tahun untuk Jati TPK Grade A
 
 === WAKTU PENGERJAAN ===
-- Stok mentahan (siap finishing): 7-14 hari
-- Custom ukuran standar: 14-21 hari kerja
-- Custom ukuran lebar >5m atau kerumitan tinggi: 25-45 hari kerja
+- Stok mentahan: 7-14 hari | Custom standar: 14-21 hari | Custom besar: 25-45 hari
 
-=== PENGIRIMAN & PEMASANGAN ===
-- Area Jawa & Bali: Dikirim dengan armada truk ekspedisi khusus mebel + tim tukang pasang (GRATIS PASANG)
-- Luar Pulau (Sumatera, Kalimantan, Sulawesi, Papua, NTT, Maluku): Packing palet kayu solid + asuransi kargo
-- Bisa cod di workshop Jepara
-- Ada foto & video update pengerjaan setiap 3 hari sekali
-
-=== GARANSI ===
-- Garansi resmi 10 tahun untuk kekuatan struktur kayu & anti rayap (khusus Jati TPK Grade A)
-- Garansi penggantian bagian jika ada cacat produksi
-- Tim purna jual siap membantu
-
-=== SISTEM PEMBAYARAN ===
-- DP awal: 30-40% saat tanda jadi & penerbitan SPK (Surat Perintah Kerja)
-- Progres tahap finishing: 30%
-- Pelunasan: saat barang selesai QC & siap kirim
-- Metode: Transfer bank, QRIS, tunai di workshop
-
-=== CARA PEMESANAN ===
-1. Hubungi via WhatsApp 0812-3456-7890 atau email mitrautama.info@gmail.com
-2. Diskusikan model, ukuran, bahan, dan finishing
-3. Tim desain membuat sketsa kerja / gambar 3D
-4. Setujui desain → tanda jadi DP
-5. Pengerjaan dimulai dengan update berkala via foto/video
-6. Pengiriman dan pemasangan
+=== PENGIRIMAN ===
+- Jawa & Bali: Truk khusus mebel + tim pasang (GRATIS PASANG)
+- Luar Pulau: Packing palet + asuransi kargo
 
 === PANDUAN MENJAWAB ===
 - Jawab dalam Bahasa Indonesia yang ramah, hangat, dan profesional
-- Gunakan emoji yang relevan untuk membuat percakapan lebih hidup (🪵 🚪 💰 ✅ 🚚 📞 dll)
-- Untuk pertanyaan harga, berikan estimasi range dengan catatan bahwa harga final tergantung detail custom
-- Selalu akhiri jawaban tentang harga/pemesanan dengan ajakan untuk menghubungi WhatsApp: 0812-3456-7890
-- Jika pertanyaan di luar topik Gebyok Kencana / Mitra Utama Group, arahkan kembali ke topik produk kami
-- Format jawaban dengan rapi menggunakan list jika diperlukan
-- Jawaban tidak boleh terlalu panjang (maksimal 200 kata per respons)
+- Gunakan emoji yang relevan (🪵 🚪 💰 ✅ 🚚 📞)
+- Selalu akhiri jawaban harga/pemesanan dengan ajakan hubungi WA: 0812-3456-7890
+- Maksimal 200 kata per respons
 `;
 
 // ==========================================
-// CHAT STATE & HISTORY
+// STATE
 // ==========================================
-let chatHistory = [];
-let isTyping = false;
+let currentUser    = null;
+let chatHistory    = [];
+let isTyping       = false;
+let currentChatRef = null;
 
 // ==========================================
 // DOM ELEMENTS
 // ==========================================
-const wrapper     = document.getElementById('aiChatWrapper');
-const toggleBtn   = document.getElementById('aiChatToggle');
-const panel       = document.getElementById('aiChatPanel');
+const wrapper      = document.getElementById('aiChatWrapper');
+const toggleBtn    = document.getElementById('aiChatToggle');
+const panel        = document.getElementById('aiChatPanel');
 const messagesArea = document.getElementById('aiMessagesArea');
-const inputEl     = document.getElementById('aiInput');
-const sendBtn     = document.getElementById('aiSendBtn');
-const clearBtn    = document.getElementById('aiClearBtn');
-const closeBtn    = document.getElementById('aiClosePanelBtn');
-const quickChips  = document.getElementById('aiQuickChips');
+const inputEl      = document.getElementById('aiInput');
+const sendBtn      = document.getElementById('aiSendBtn');
+const clearBtn     = document.getElementById('aiClearBtn');
+const closeBtn     = document.getElementById('aiClosePanelBtn');
+const quickChips   = document.getElementById('aiQuickChips');
 
 // ==========================================
-// HELPER: Check if API key is configured
+// CHECK CONFIG
 // ==========================================
-function isApiKeyConfigured() {
-  return GEMINI_API_KEY && GEMINI_API_KEY !== 'MASUKKAN_API_KEY_ANDA_DISINI' && GEMINI_API_KEY.length > 10;
+function isFirebaseConfigured() {
+  return firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('MASUKKAN');
+}
+function isGeminiConfigured() {
+  return GEMINI_API_KEY && !GEMINI_API_KEY.includes('MASUKKAN');
 }
 
 // ==========================================
@@ -170,14 +142,8 @@ function isApiKeyConfigured() {
 function openPanel() {
   wrapper.classList.add('open');
   panel.setAttribute('aria-hidden', 'false');
-  inputEl && inputEl.focus();
-
-  // Show API key warning if not configured
-  if (!isApiKeyConfigured()) {
-    showApiKeyWarning();
-  }
+  if (currentUser && inputEl) inputEl.focus();
 }
-
 function closePanel() {
   wrapper.classList.remove('open');
   panel.setAttribute('aria-hidden', 'true');
@@ -186,41 +152,200 @@ function closePanel() {
 toggleBtn && toggleBtn.addEventListener('click', () => {
   wrapper.classList.contains('open') ? closePanel() : openPanel();
 });
-
 closeBtn && closeBtn.addEventListener('click', closePanel);
 
 // ==========================================
-// SHOW API KEY WARNING
+// AUTH STATE LISTENER
 // ==========================================
-function showApiKeyWarning() {
-  if (document.getElementById('aiApiKeyWarn')) return;
-
-  const warn = document.createElement('div');
-  warn.className = 'ai-apikey-warn';
-  warn.id = 'aiApiKeyWarn';
-  warn.innerHTML = `
-    <strong>⚠️ API Key Belum Dikonfigurasi</strong>
-    <span>Untuk mengaktifkan AI, masukkan Gemini API Key di file <code>ai-chat.js</code> baris pertama.</span>
-    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">🔑 Dapatkan API Key GRATIS di Google AI Studio →</a>
-  `;
-
-  const firstMsg = messagesArea.querySelector('.ai-msg');
-  if (firstMsg && firstMsg.nextSibling) {
-    messagesArea.insertBefore(warn, firstMsg.nextSibling);
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    await saveUserToFirestore(user);
+    showChatInterface(user);
   } else {
-    messagesArea.appendChild(warn);
+    currentUser = null;
+    showLoginScreen();
   }
+});
 
-  // Disable input
-  if (inputEl) inputEl.disabled = true;
-  if (sendBtn) sendBtn.disabled = true;
-  if (inputEl) inputEl.placeholder = 'API Key belum dikonfigurasi...';
+// ==========================================
+// SAVE USER TO FIRESTORE
+// ==========================================
+async function saveUserToFirestore(user) {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    await setDoc(userRef, {
+      uid:          user.uid,
+      name:         user.displayName,
+      email:        user.email,
+      photo:        user.photoURL,
+      lastSeen:     serverTimestamp(),
+      firstLogin:   serverTimestamp(),
+    }, { merge: true }); // merge: true — jangan timpa data existing
+  } catch (err) {
+    console.error('Error saving user:', err);
+  }
 }
 
 // ==========================================
-// APPEND MESSAGE TO CHAT
+// SHOW LOGIN SCREEN
+// ==========================================
+function showLoginScreen() {
+  if (!messagesArea) return;
+
+  messagesArea.innerHTML = `
+    <div class="ai-login-screen">
+      <div class="ai-login-icon">🤖</div>
+      <h3 class="ai-login-title">Asisten Kencana AI</h3>
+      <p class="ai-login-desc">Login dengan akun Google Anda untuk mulai bertanya tentang produk Gebyok Kencana Jati Jepara.</p>
+      <button class="ai-google-btn" id="aiGoogleLoginBtn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20">
+        <span>Login dengan Google</span>
+      </button>
+      <p class="ai-login-note">🔒 Data Anda aman & tidak dibagikan ke pihak ketiga</p>
+    </div>
+  `;
+
+  // Disable input area
+  if (inputEl) { inputEl.disabled = true; inputEl.placeholder = 'Login Google dulu untuk mulai chat...'; }
+  if (sendBtn) sendBtn.disabled = true;
+  if (quickChips) quickChips.style.display = 'none';
+
+  // Attach login button
+  const loginBtn = document.getElementById('aiGoogleLoginBtn');
+  loginBtn && loginBtn.addEventListener('click', loginWithGoogle);
+
+  // Check config
+  if (!isFirebaseConfigured() || !isGeminiConfigured()) {
+    const screen = messagesArea.querySelector('.ai-login-screen');
+    if (screen) {
+      screen.insertAdjacentHTML('beforeend', `
+        <div class="ai-apikey-warn" style="margin-top:12px">
+          <strong>⚠️ Konfigurasi Belum Lengkap</strong>
+          <span>Isi Firebase Config & Gemini API Key di file <code>ai-chat.js</code></span>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank">🔑 Dapatkan Gemini API Key Gratis →</a>
+        </div>
+      `);
+    }
+    if (loginBtn) loginBtn.disabled = true;
+  }
+}
+
+// ==========================================
+// SHOW CHAT INTERFACE (after login)
+// ==========================================
+function showChatInterface(user) {
+  if (!messagesArea) return;
+
+  // Update header to show user info
+  const headerLeft = panel && panel.querySelector('.ai-header-left');
+  if (headerLeft) {
+    headerLeft.innerHTML = `
+      <img src="${user.photoURL || 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'}"
+           alt="${user.displayName}"
+           style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);object-fit:cover">
+      <div class="ai-header-info">
+        <span class="ai-name">Halo, ${user.displayName?.split(' ')[0]} 👋</span>
+        <span class="ai-status"><span class="ai-status-dot"></span>Asisten Kencana AI Siap</span>
+      </div>
+    `;
+  }
+
+  // Add logout button to header actions
+  const headerActions = panel && panel.querySelector('.ai-header-actions');
+  if (headerActions && !headerActions.querySelector('#aiLogoutBtn')) {
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'ai-clear-btn';
+    logoutBtn.id = 'aiLogoutBtn';
+    logoutBtn.title = 'Logout';
+    logoutBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i>';
+    logoutBtn.addEventListener('click', logoutUser);
+    headerActions.insertBefore(logoutBtn, headerActions.firstChild);
+  }
+
+  // Show welcome message
+  messagesArea.innerHTML = `
+    <div class="ai-msg ai-msg-bot">
+      <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="ai-msg-bubble">
+        <p>🪵 Halo <strong>${user.displayName?.split(' ')[0]}</strong>! Saya <strong>Asisten Kencana AI</strong>, siap membantu Anda!</p>
+        <p>Silakan tanyakan seputar produk, harga, atau pemesanan Gebyok Kencana Jati Jepara. 👇</p>
+      </div>
+    </div>
+    <div class="ai-quick-chips" id="aiQuickChips">
+      <button class="chip" data-q="Berapa harga pintu gebyok kudus ukuran 3 meter?">💰 Harga Gebyok Kudus 3m</button>
+      <button class="chip" data-q="Apa saja model gebyok yang tersedia?">🚪 Model yang Tersedia</button>
+      <button class="chip" data-q="Berapa lama waktu pengerjaan gebyok?">⏱️ Lama Pengerjaan</button>
+      <button class="chip" data-q="Apakah bisa custom ukuran sesuai keinginan saya?">✏️ Custom Ukuran</button>
+      <button class="chip" data-q="Bagaimana sistem pengiriman dan pemasangan?">🚚 Pengiriman & Pasang</button>
+      <button class="chip" data-q="Ada garansi berapa tahun?">🛡️ Info Garansi</button>
+    </div>
+  `;
+
+  // Enable input
+  if (inputEl) { inputEl.disabled = false; inputEl.placeholder = 'Ketik pertanyaan Anda di sini...'; }
+  if (sendBtn) sendBtn.disabled = false;
+
+  // Re-attach chip listeners
+  messagesArea.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => sendMessage(chip.getAttribute('data-q')));
+  });
+
+  // Create Firestore chat session
+  createChatSession(user);
+}
+
+// ==========================================
+// CREATE FIRESTORE CHAT SESSION
+// ==========================================
+async function createChatSession(user) {
+  try {
+    currentChatRef = doc(collection(db, 'users', user.uid, 'chats'));
+    await setDoc(currentChatRef, {
+      startedAt: serverTimestamp(),
+      userAgent: navigator.userAgent,
+      page:      window.location.href,
+    });
+  } catch (err) {
+    console.error('Error creating chat session:', err);
+  }
+}
+
+// ==========================================
+// GOOGLE LOGIN
+// ==========================================
+async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await signInWithPopup(auth, provider);
+    // onAuthStateChanged will handle the rest
+  } catch (err) {
+    if (err.code !== 'auth/popup-closed-by-user') {
+      console.error('Login error:', err);
+      alert('Gagal login: ' + err.message);
+    }
+  }
+}
+
+// ==========================================
+// LOGOUT
+// ==========================================
+async function logoutUser() {
+  if (confirm('Yakin ingin logout dari Asisten Kencana AI?')) {
+    chatHistory = [];
+    await signOut(auth);
+    // onAuthStateChanged will show login screen
+  }
+}
+
+// ==========================================
+// APPEND MESSAGE
 // ==========================================
 function appendMessage(role, htmlContent) {
+  const chips = messagesArea.querySelector('.ai-quick-chips');
+  if (role === 'user' && chips) chips.style.display = 'none';
+
   const msgEl = document.createElement('div');
   msgEl.className = `ai-msg ai-msg-${role}`;
 
@@ -230,14 +355,7 @@ function appendMessage(role, htmlContent) {
       <div class="ai-msg-bubble">${htmlContent}</div>
     `;
   } else {
-    msgEl.innerHTML = `
-      <div class="ai-msg-bubble">${htmlContent}</div>
-    `;
-  }
-
-  // Hide chips after first user message
-  if (role === 'user' && quickChips) {
-    quickChips.style.display = 'none';
+    msgEl.innerHTML = `<div class="ai-msg-bubble">${htmlContent}</div>`;
   }
 
   messagesArea.appendChild(msgEl);
@@ -249,120 +367,101 @@ function appendMessage(role, htmlContent) {
 // TYPING INDICATOR
 // ==========================================
 function showTyping() {
-  const typingEl = document.createElement('div');
-  typingEl.className = 'ai-msg ai-msg-bot';
-  typingEl.id = 'aiTypingIndicator';
-  typingEl.innerHTML = `
+  const el = document.createElement('div');
+  el.className = 'ai-msg ai-msg-bot';
+  el.id = 'aiTypingIndicator';
+  el.innerHTML = `
     <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
     <div class="ai-typing-bubble">
-      <span class="typing-dot"></span>
-      <span class="typing-dot"></span>
-      <span class="typing-dot"></span>
-    </div>
-  `;
-  messagesArea.appendChild(typingEl);
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>`;
+  messagesArea.appendChild(el);
   scrollToBottom();
 }
-
 function hideTyping() {
-  const typingEl = document.getElementById('aiTypingIndicator');
-  if (typingEl) typingEl.remove();
+  const el = document.getElementById('aiTypingIndicator');
+  if (el) el.remove();
 }
-
 function scrollToBottom() {
-  if (messagesArea) {
-    messagesArea.scrollTop = messagesArea.scrollHeight;
-  }
+  if (messagesArea) messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
 // ==========================================
-// SIMPLE MARKDOWN PARSER (Bold, List, Line Breaks)
+// SIMPLE MARKDOWN PARSER
 // ==========================================
 function parseMarkdown(text) {
   return text
-    // Bold **text**
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic *text*
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Bullet list: lines starting with - or *
     .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
-    // Wrap consecutive <li> in <ul>
-    .replace(/(<li>.*?<\/li>(\s*<li>.*?<\/li>)*)/gs, '<ul>$1</ul>')
-    // Double line breaks to paragraph breaks
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
     .replace(/\n{2,}/g, '</p><p>')
-    // Single line breaks
-    .replace(/\n/g, '<br>')
-    // Wrap in paragraph
-    .replace(/^(?!<ul>|<p>)(.+)/, '<p>$1')
-    .replace(/(.+)(?<!>)$/, '$1</p>');
+    .replace(/\n/g, '<br>');
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ==========================================
 // CALL GEMINI API
 // ==========================================
 async function askGemini(userMessage) {
-  if (!isApiKeyConfigured()) return;
+  chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
 
-  // Add to history
-  chatHistory.push({
-    role: 'user',
-    parts: [{ text: userMessage }]
-  });
-
-  const requestBody = {
-    system_instruction: {
-      parts: [{ text: SYSTEM_PROMPT }]
-    },
+  const body = {
+    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents: chatHistory,
-    generationConfig: {
-      temperature: 0.75,
-      maxOutputTokens: 512,
-      topP: 0.95,
-    },
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-    ]
+    generationConfig: { temperature: 0.75, maxOutputTokens: 512, topP: 0.95 },
   };
 
   try {
-    const response = await fetch(GEMINI_API_URL, {
+    const res = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(body)
     });
 
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData?.error?.message || `HTTP ${response.status}`);
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
 
-    const data = await response.json();
+    const data = await res.json();
     const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!aiText) throw new Error('Respons kosong');
 
-    if (!aiText) throw new Error('Respons kosong dari AI');
-
-    // Add AI response to history
-    chatHistory.push({
-      role: 'model',
-      parts: [{ text: aiText }]
-    });
-
+    chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
     return aiText;
 
   } catch (err) {
-    console.error('Gemini API Error:', err);
-
-    // Handle specific errors
-    if (err.message.includes('API_KEY_INVALID') || err.message.includes('API key not valid')) {
-      return '⚠️ **API Key tidak valid.** Pastikan Anda sudah memasukkan API Key yang benar dari [Google AI Studio](https://aistudio.google.com/app/apikey).';
+    console.error('Gemini Error:', err);
+    if (err.message.includes('API key not valid')) {
+      return '⚠️ **API Key Gemini tidak valid.** Silakan periksa konfigurasi di file `ai-chat.js`.';
     }
+    return '😔 Maaf, terjadi gangguan. Hubungi kami langsung via WhatsApp **0812-3456-7890**.';
+  }
+}
 
-    if (err.message.includes('QUOTA_EXCEEDED') || err.message.includes('429')) {
-      return '⚠️ Kuota API sementara habis. Silakan coba beberapa saat lagi atau hubungi kami langsung via WhatsApp **0812-3456-7890**.';
-    }
-
-    return '😔 Maaf, terjadi gangguan koneksi. Silakan coba lagi atau hubungi kami langsung via WhatsApp **0812-3456-7890** untuk mendapatkan informasi lengkap.';
+// ==========================================
+// SAVE MESSAGE TO FIRESTORE
+// ==========================================
+async function saveMessageToFirestore(userMsg, aiMsg) {
+  if (!currentUser || !currentChatRef) return;
+  try {
+    // Save message pair
+    await addDoc(collection(currentChatRef, 'messages'), {
+      userMessage: userMsg,
+      aiResponse:  aiMsg,
+      timestamp:   serverTimestamp(),
+    });
+    // Update user stats
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      totalChats:  increment(1),
+      lastSeen:    serverTimestamp(),
+    });
+  } catch (err) {
+    console.error('Error saving message:', err);
   }
 }
 
@@ -370,99 +469,50 @@ async function askGemini(userMessage) {
 // SEND MESSAGE
 // ==========================================
 async function sendMessage(text) {
-  const message = (text || (inputEl && inputEl.value.trim()));
-  if (!message || isTyping) return;
+  const message = text || (inputEl && inputEl.value.trim());
+  if (!message || isTyping || !currentUser) return;
 
-  if (!isApiKeyConfigured()) {
-    showApiKeyWarning();
-    return;
-  }
-
-  // Clear input
-  if (inputEl) {
-    inputEl.value = '';
-    inputEl.style.height = 'auto';
-  }
+  if (inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
 
   isTyping = true;
   if (sendBtn) sendBtn.disabled = true;
 
-  // Show user message
   appendMessage('user', escapeHtml(message));
-
-  // Show typing
   showTyping();
 
-  // Call Gemini
   const aiResponse = await askGemini(message);
-
-  // Remove typing, show AI reply
   hideTyping();
 
   if (aiResponse) {
     appendMessage('bot', parseMarkdown(aiResponse));
+    // Save to Firestore in background
+    saveMessageToFirestore(message, aiResponse);
   }
 
   isTyping = false;
   if (sendBtn) sendBtn.disabled = false;
-  if (inputEl) {
-    inputEl.disabled = false;
-    inputEl.focus();
-  }
+  if (inputEl) { inputEl.disabled = false; inputEl.focus(); }
 }
 
 // ==========================================
-// ESCAPE HTML (prevent XSS in user messages)
+// CLEAR CHAT
 // ==========================================
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+clearBtn && clearBtn.addEventListener('click', () => {
+  if (!currentUser) return;
+  chatHistory = [];
+  showChatInterface(currentUser);
+});
 
 // ==========================================
 // EVENT LISTENERS
 // ==========================================
-
-// Send button
 sendBtn && sendBtn.addEventListener('click', () => sendMessage());
 
-// Enter key (Shift+Enter for new line)
 inputEl && inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
 
-// Auto-resize textarea
 inputEl && inputEl.addEventListener('input', () => {
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + 'px';
-});
-
-// Quick chips click
-quickChips && quickChips.querySelectorAll('.chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    const question = chip.getAttribute('data-q');
-    if (question) sendMessage(question);
-  });
-});
-
-// Clear history
-clearBtn && clearBtn.addEventListener('click', () => {
-  chatHistory = [];
-  // Clear all bot/user messages except welcome
-  const messages = messagesArea.querySelectorAll('.ai-msg');
-  messages.forEach((msg, i) => {
-    if (i > 0) msg.remove();
-  });
-  // Show chips again
-  if (quickChips) quickChips.style.display = 'flex';
-  // Remove api key warning if present
-  const warn = document.getElementById('aiApiKeyWarn');
-  if (warn) warn.remove();
 });

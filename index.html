@@ -881,6 +881,91 @@
     </div>
   </div>
 
+  <!-- AI Chatbot Widget -->
+  <div class="ai-chat-wrapper" id="aiChatWrapper">
+    <!-- Toggle Button -->
+    <button class="ai-chat-toggle" id="aiChatToggle" aria-label="Buka AI Asisten Gebyok Kencana">
+      <span class="ai-tooltip">Tanya AI Asisten Kami</span>
+      <div class="ai-btn-icon">
+        <i class="fa-solid fa-robot ai-icon-robot"></i>
+        <i class="fa-solid fa-xmark ai-icon-close"></i>
+      </div>
+      <span class="ai-pulse-ring"></span>
+    </button>
+
+    <!-- Chat Panel -->
+    <div class="ai-chat-panel" id="aiChatPanel" aria-hidden="true">
+      <!-- Panel Header -->
+      <div class="ai-panel-header">
+        <div class="ai-header-left">
+          <div class="ai-avatar">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div class="ai-header-info">
+            <span class="ai-name">Asisten Kencana AI</span>
+            <span class="ai-status"><span class="ai-status-dot"></span>Online & Siap Membantu</span>
+          </div>
+        </div>
+        <div class="ai-header-actions">
+          <button class="ai-clear-btn" id="aiClearBtn" title="Hapus riwayat percakapan">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+          <button class="ai-close-btn" id="aiClosePanelBtn" aria-label="Tutup Chat">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div class="ai-messages-area" id="aiMessagesArea">
+        <!-- Welcome Message -->
+        <div class="ai-msg ai-msg-bot">
+          <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+          <div class="ai-msg-bubble">
+            <p>🪵 Halo! Saya <strong>Asisten Kencana AI</strong>, siap membantu Anda!</p>
+            <p>Saya bisa menjawab pertanyaan seputar:</p>
+            <ul>
+              <li>🚪 Produk & koleksi Gebyok Kencana</li>
+              <li>💰 Estimasi harga & cara pemesanan</li>
+              <li>🚚 Pengiriman & pemasangan</li>
+              <li>🛡️ Garansi & kualitas kayu jati</li>
+              <li>✏️ Custom desain & ukuran</li>
+            </ul>
+            <p>Silakan tanyakan apa saja! 👇</p>
+          </div>
+        </div>
+
+        <!-- Quick Question Chips -->
+        <div class="ai-quick-chips" id="aiQuickChips">
+          <button class="chip" data-q="Berapa harga pintu gebyok kudus ukuran 3 meter?">💰 Harga Gebyok Kudus 3m</button>
+          <button class="chip" data-q="Apa saja model gebyok yang tersedia?">🚪 Model yang Tersedia</button>
+          <button class="chip" data-q="Berapa lama waktu pengerjaan gebyok?">⏱️ Lama Pengerjaan</button>
+          <button class="chip" data-q="Apakah bisa custom ukuran sesuai keinginan saya?">✏️ Custom Ukuran</button>
+          <button class="chip" data-q="Bagaimana sistem pengiriman dan pemasangan?">🚚 Pengiriman & Pasang</button>
+          <button class="chip" data-q="Ada garansi berapa tahun?">🛡️ Info Garansi</button>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="ai-input-area">
+        <div class="ai-input-wrapper">
+          <textarea
+            class="ai-input"
+            id="aiInput"
+            placeholder="Ketik pertanyaan Anda di sini..."
+            rows="1"
+            aria-label="Ketik pesan untuk AI Asisten"
+          ></textarea>
+          <button class="ai-send-btn" id="aiSendBtn" aria-label="Kirim pesan">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+        <p class="ai-disclaimer">Powered by <strong>Gemini AI</strong> · Jawaban otomatis, konfirmasi via WhatsApp</p>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
+  <script src="ai-chat.js"></script>
 </body>
 </html>
